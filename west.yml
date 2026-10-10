@@ -1,0 +1,21 @@
+manifest:
+  self:
+    west-commands: scripts/west-commands.yml
+    path: app/zephyr-c-rust
+
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rtos
+      revision: v4.4.2
+      import:
+        name-allowlist:
+          - cmsis_6
+
+    - name: zephyr-lang-rust
+      remote: zephyrproject-rtos
+      revision: b7c19a642f2a433726cf0ea2c4ec2f205c6cee7b
+      path: modules/lang/rust
