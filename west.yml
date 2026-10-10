@@ -1,7 +1,6 @@
 manifest:
   self:
-    west-commands: scripts/west-commands.yml
-    path: app/zephyr-c-rust
+    path: app
 
   remotes:
     - name: zephyrproject-rtos
@@ -12,10 +11,11 @@ manifest:
       remote: zephyrproject-rtos
       revision: v4.4.2
       import:
+        path-prefix: deps
         name-allowlist:
           - cmsis_6
 
     - name: zephyr-lang-rust
       remote: zephyrproject-rtos
       revision: b7c19a642f2a433726cf0ea2c4ec2f205c6cee7b
-      path: modules/lang/rust
+      path: deps/modules/lang/rust
