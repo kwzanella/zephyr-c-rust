@@ -12,7 +12,7 @@
 #define STACKSIZE 1024
 
 // Message delay to simulate computation
-#define DELAY_MS 200
+#define DELAY_MS 100
 
 #define MS_TO_US 1000
 #define PRODUCER_US ((DELAY_MS) * MS_TO_US)
@@ -20,18 +20,20 @@
 
 /*
  * Prints once per X number of messages.
- * Used to avoid timing interference.
+ * Used to avoid deadline timing interference.
+ * The higher the value, the lower DEADLINE_MS can be.
  */
-#define PRINT_RATE (100)
+#define PRINT_RATE (200)
 
 /*
- * Deadline must take into account:
- *     - Consumer compute;
- *     - Schedulling;
- *     - Queueing; and
+ * Deadline must take into account several delays.
+ * All delays have been combined to 35 ms. This value has been defined empirically.
+ * The delays are:
+ *     - Queueing (from producer and consumer);
+ *     - Zephyr schedulling; and
  *     - logging delay (printk).
  */
-#define DEADLINE_MS (DELAY_MS + 50)
+#define DEADLINE_MS (DELAY_MS + 35)
 
 // Timeout to wait emitting or accepting from channel
 #define CHANNEL_TIMEOUT_MS (DEADLINE_MS)
@@ -133,7 +135,7 @@ void check_deadline(Message *msg, uint64_t *deadline_misses, uint64_t *on_time) 
 
 // Print producer state
 void print_producer(uint64_t *emitted, uint64_t *queue_full, uint64_t *channel_err) {
-    printk("Produced: %llu, queue-full drops: %llu, channel err: %llu\n",
+    printk("emitted: %llu, queue-full drops: %llu, channel err: %llu\n",
         (unsigned long long)*emitted,
         (unsigned long long)*queue_full,
         (unsigned long long)*channel_err);
