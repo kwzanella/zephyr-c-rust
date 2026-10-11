@@ -27,13 +27,13 @@
 
 /*
  * Deadline must take into account several delays.
- * All delays have been combined to 35 ms. This value has been defined empirically.
+ * All delays have been combined to 50 ms. This value has been defined empirically.
  * The delays are:
  *     - Queueing (from producer and consumer);
  *     - Zephyr schedulling; and
  *     - logging delay (printk).
  */
-#define DEADLINE_MS (DELAY_MS + 35)
+#define DEADLINE_MS (DELAY_MS + 50)
 
 // Timeout to wait emitting or accepting from channel
 #define CHANNEL_TIMEOUT_MS (DEADLINE_MS)
@@ -147,8 +147,8 @@ void print_consumer(uint64_t *attempts, uint64_t *accepted,
     uint64_t *deadline_misses, uint64_t *on_time,
     uint64_t *receive_errors)
 {
-    printk("attempts: %llu, accepted: %llu, receive errors: %llu, checksum errors: %llu, "
-            "sequence errors: %llu, deadline misses: %llu, "
+    printk("attempts: %llu, accepted: %llu, receive err: %llu, checksum err: %llu, "
+            "sequence err: %llu, deadline misses: %llu, "
             "on time: %llu\n",
             (unsigned long long)*attempts,
             (unsigned long long)*accepted,
@@ -236,21 +236,18 @@ int main(void)
         K_THREAD_STACK_SIZEOF(g_producer_stack),
         producer_function, NULL, NULL, NULL,
         PRIORITY, 0, K_NO_WAIT);
-
     k_thread_name_set(&g_producer_data, "producer_task");
 
     k_thread_create(&g_consumer_data, g_consumer_stack,
         K_THREAD_STACK_SIZEOF(g_consumer_stack),
         consumer_function, NULL, NULL, NULL,
         PRIORITY, 0, K_NO_WAIT);
-
     k_thread_name_set(&g_consumer_data, "consumer_task");
 
     printk("Starting threads...\n");
 
     k_thread_start(&g_consumer_data);
     k_thread_start(&g_producer_data);
-
     k_sem_give(&g_start_sem);
     k_sem_give(&g_start_sem);
 
