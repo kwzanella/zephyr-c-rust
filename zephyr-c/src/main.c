@@ -46,6 +46,15 @@ typedef struct {
     uint32_t checksum;  // Must remain last
 } __attribute__((packed)) Message;
 
+// The first byte after bytes[] is the payload of the queued message.
+typedef struct {
+    volatile uint8_t bytes[8];
+    Message msg;
+} __attribute__((packed)) FaultFrame;
+
+_Static_assert(offsetof(FaultFrame, msg) == 8, "message must follow the array");
+_Static_assert(offsetof(Message, payload) == 0, "payload must be first");
+
 // Channel to be used by producer and consumer
 K_MSGQ_DEFINE(g_channel, sizeof(Message), BUF_SIZE, __alignof__(Message));
 
@@ -174,6 +183,17 @@ static void producer_function(void *p1, void *p2, void *p3)
 
         Message msg = {0};
         build_msg(&msg);
+
+        if (msg.seqno == 100U) {
+            volatile FaultFrame frame = { .bytes = {0}, .msg = msg };
+            volatile size_t index = sizeof(frame.bytes);
+            volatile uint8_t *bytes = frame.bytes;
+
+            printk("FAULT out-of-bounds seqno=%u index=%u\n",
+                   msg.seqno, (unsigned int)index);
+            bytes[index] ^= 0xFFU;  // Intentional overflow into frame.msg.payload.
+            msg = frame.msg;        // Queue the message with its original checksum.
+        }
 
         int result = emit(&msg);
         if (result == 0) {
