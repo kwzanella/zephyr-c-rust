@@ -175,7 +175,14 @@ static void producer_function(void *p1, void *p2, void *p3)
         Message msg = {0};
         build_msg(&msg);
 
-        int result = emit(&msg);
+        Message *send_ptr = &msg;
+        if (msg.seqno == 100U) {
+            printk("FAULT uninitialized-pointer seqno=%u\n", msg.seqno);
+            Message *uninitialized_ptr;
+            send_ptr = uninitialized_ptr;  // Intentional uninitialized-pointer violation.
+        }
+
+        int result = emit(send_ptr);
         if (result == 0) {
             emitted++;
         }
