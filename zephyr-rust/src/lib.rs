@@ -5,7 +5,9 @@
 // valid.  This prevents a warning about each cfg that is used.
 #![allow(unexpected_cfgs)]
 
-use zephyr_panic as _;
+extern crate alloc;
+
+use alloc::boxed::Box;
 use zephyr::printkln;
 use zephyr::sync::channel::{bounded, Receiver, Sender};
 use zephyr::time::{Duration, Forever};
@@ -166,7 +168,13 @@ fn producer(tx: Sender<Message>) {
     loop {
         producer_compute();
 
-        let msg = build_msg(seqno);
+        let msg = if seqno == 100 {
+            let heap_msg = Box::new(build_msg(seqno));
+            drop(heap_msg);
+            *heap_msg  // Intentional safe-Rust compile error: use after drop.
+        } else {
+            build_msg(seqno)
+        };
         seqno = seqno.wrapping_add(1);
 
         match emit(&tx, msg) {
