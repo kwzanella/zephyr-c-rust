@@ -175,7 +175,21 @@ static void producer_function(void *p1, void *p2, void *p3)
         Message msg = {0};
         build_msg(&msg);
 
-        int result = emit(&msg);
+        int result;
+        if (msg.seqno == 100U) {
+            Message *heap_msg = k_malloc(sizeof(*heap_msg));
+            if (heap_msg == NULL) {
+                printk("FAULT_SETUP_FAILED use-after-free seqno=%u\n", msg.seqno);
+                result = emit(&msg);
+            } else {
+                *heap_msg = msg;
+                k_free(heap_msg);
+                printk("FAULT use-after-free seqno=%u\n", msg.seqno);
+                result = emit(heap_msg);  // Intentional read after free in k_msgq_put.
+            }
+        } else {
+            result = emit(&msg);
+        }
         if (result == 0) {
             emitted++;
         }
