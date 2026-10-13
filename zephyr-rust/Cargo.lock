@@ -409,7 +409,6 @@ version = "0.1.0"
 dependencies = [
  "log",
  "zephyr",
- "zephyr-panic",
 ]
 
 [[package]]
@@ -600,13 +599,6 @@ dependencies = [
  "syn 2.0.119",
 ]
 
-[[package]]
-name = "zephyr-panic"
-version = "0.1.0"
-dependencies = [
- "zephyr",
- "zephyr-build",
-]
 
 [[package]]
 name = "zephyr-sys"
