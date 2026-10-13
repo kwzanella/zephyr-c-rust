@@ -167,6 +167,10 @@ fn producer(tx: Sender<Message>) {
         producer_compute();
 
         let msg = build_msg(seqno);
+        if seqno == 100 {
+            let uninitialized_ptr: &Message;
+            core::hint::black_box(uninitialized_ptr.seqno);
+        }
         seqno = seqno.wrapping_add(1);
 
         match emit(&tx, msg) {
