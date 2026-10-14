@@ -5,6 +5,7 @@
 // valid.  This prevents a warning about each cfg that is used.
 #![allow(unexpected_cfgs)]
 
+use zephyr_panic as _;
 use zephyr::printkln;
 use zephyr::sync::channel::{bounded, Receiver, Sender};
 use zephyr::time::{Duration, Forever};
@@ -171,6 +172,7 @@ fn producer(tx: Sender<Message>) {
             let index = (seqno - 92) as usize;
             printkln!("FAULT out-of-bounds seqno={} index={}", seqno, index);
             bytes[index] = 0;  // Safe Rust checks this runtime index and panics.
+            printkln!("bytes[0]={}", bytes[0]);
         }
         seqno = seqno.wrapping_add(1);
 
