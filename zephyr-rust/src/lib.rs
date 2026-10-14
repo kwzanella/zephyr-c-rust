@@ -195,9 +195,11 @@ fn producer(tx: Sender<Message>) {
 
         if let Some(invalid_ptr) = invalid_free_ptr {
             printkln!("FAULT invalid-free seqno=100 offset={}", INVALID_FREE_OFFSET_BYTES);
-            // Intentionally outside an unsafe block: expected unsafe-call rejection.
-            // This tests the unsafe API boundary, not detection of this pointer value.
-            drop(Box::from_raw(invalid_ptr));
+            // Intentional invalid-free fault: reconstruct ownership from an interior
+            // pointer and attempt deallocation. This violates the API contract.
+            unsafe {
+                drop(Box::from_raw(invalid_ptr));
+            }
         }
 
         if (emitted + send_errors).is_multiple_of(PRINT_RATE) {
