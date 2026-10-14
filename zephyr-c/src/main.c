@@ -10,6 +10,7 @@
 #define BUF_SIZE 10
 #define PRIORITY 5
 #define STACKSIZE 1024
+#define INVALID_FREE_OFFSET_BYTES 8U
 
 // Message delay to simulate computation
 #define DELAY_MS 100
@@ -175,7 +176,24 @@ static void producer_function(void *p1, void *p2, void *p3)
         Message msg = {0};
         build_msg(&msg);
 
-        int result = emit(&msg);
+        int result;
+        if (msg.seqno == 100U) {
+            Message *heap_msg = k_malloc(sizeof(*heap_msg));
+            if (heap_msg == NULL) {
+                printk("FAULT_SETUP_FAILED invalid-free seqno=%u\n", msg.seqno);
+                result = emit(&msg);
+            } else {
+                *heap_msg = msg;
+                result = emit(heap_msg);  // Queue copies the valid message before injection.
+                printk("FAULT invalid-free seqno=%u offset=%u\n",
+                       msg.seqno, INVALID_FREE_OFFSET_BYTES);
+                // Intentional invalid free: this is not the address returned by k_malloc.
+                k_free((uint8_t *)heap_msg + INVALID_FREE_OFFSET_BYTES);
+                // Do not attempt a second free after the allocator contract is violated.
+            }
+        } else {
+            result = emit(&msg);
+        }
         if (result == 0) {
             emitted++;
         }
