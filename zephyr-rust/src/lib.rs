@@ -197,6 +197,8 @@ fn producer(tx: Sender<Message>) {
             printkln!("FAULT invalid-free seqno=100 offset={}", INVALID_FREE_OFFSET_BYTES);
             // Intentional invalid-free fault: reconstruct ownership from an interior
             // pointer and attempt deallocation. This violates the API contract.
+
+            // SAFETY: Add unsafe block to test invalid-free fault
             unsafe {
                 drop(Box::from_raw(invalid_ptr));
             }
