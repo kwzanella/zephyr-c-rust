@@ -6,6 +6,10 @@
 #![allow(unexpected_cfgs)]
 
 use zephyr_panic as _;
+
+extern crate alloc;
+
+use alloc::boxed::Box;
 use zephyr::printkln;
 use zephyr::sync::channel::{bounded, Receiver, Sender};
 use zephyr::time::{Duration, Forever};
@@ -15,6 +19,7 @@ use zephyr::sys::sync::Semaphore;
 const BUF_SIZE: usize = 10;
 const PRIORITY: i32 = 5;
 const STACKSIZE: usize = 1024;
+const INVALID_FREE_OFFSET_BYTES: usize = 8;
 
 // Message delay to simulate computation
 const DELAY_MS: u32 = 100;
@@ -169,9 +174,30 @@ fn producer(tx: Sender<Message>) {
         let msg = build_msg(seqno);
         seqno = seqno.wrapping_add(1);
 
+        let invalid_free_ptr = if msg.seqno == 100 {
+            let heap_msg = Box::new(Message {
+                payload: msg.payload,
+                seqno: msg.seqno,
+                deadline_ms: msg.deadline_ms,
+                checksum: msg.checksum,
+            });
+            let allocation_ptr = Box::into_raw(heap_msg);
+            Some((allocation_ptr as *mut u8)
+                .wrapping_add(INVALID_FREE_OFFSET_BYTES) as *mut Message)
+        } else {
+            None
+        };
+
         match emit(&tx, msg) {
             Ok(()) => emitted += 1,
             Err(_) => send_errors += 1,
+        }
+
+        if let Some(invalid_ptr) = invalid_free_ptr {
+            printkln!("FAULT invalid-free seqno=100 offset={}", INVALID_FREE_OFFSET_BYTES);
+            // Intentionally outside an unsafe block: expected unsafe-call rejection.
+            // This tests the unsafe API boundary, not detection of this pointer value.
+            drop(Box::from_raw(invalid_ptr));
         }
 
         if (emitted + send_errors).is_multiple_of(PRINT_RATE) {
