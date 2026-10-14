@@ -16,3 +16,6 @@ crate-type = ["staticlib"]
 zephyr = "0.1.0"
 zephyr-panic = "0.1.0"
 log = "0.4.22"
+
+[profile.release]
+opt-level = "s"
