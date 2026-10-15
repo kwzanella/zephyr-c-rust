@@ -7,6 +7,7 @@
 
 extern crate alloc;
 
+use zephyr_panic as _;
 use alloc::boxed::Box;
 use zephyr::printkln;
 use zephyr::sync::channel::{bounded, Receiver, Sender};
