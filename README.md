@@ -1,5 +1,5 @@
 # zephyr-c-rust
-C vs. Rust: Compile-time memory safety and reliability in Zephyr RTOS.
+C vs. Rust comparison of compile-time memory safety, runtime reliability, and memory usage in a Zephyr RTOS RTP/C application.
 
 ## Compilation
 In the root of the repo, execute one of the commands described below.
